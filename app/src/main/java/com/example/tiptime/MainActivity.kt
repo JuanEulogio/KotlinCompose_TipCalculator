@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -58,8 +60,17 @@ fun TipTimeLayout() {
     //At the end of the statement, add an ?: Elvis operator that returns a 0.0 value when amountInput is null:
     //The ?: Elvis operator returns the expression that precedes it if the value isn't null and the expression that proceeds it when the value is null.
     val amount = amountInput.toDoubleOrNull() ?: 0.0
+
+
+    //for second box
+    var tipAmountInput by remember { mutableStateOf("") }
+    //At the end of the statement, add an ?: Elvis operator that returns a 0.0 value when amountInput is null:
+    //The ?: Elvis operator returns the expression that precedes it if the value isn't null and the expression that proceeds it when the value is null.
+    val tipAmount = tipAmountInput.toDoubleOrNull() ?: 0.0
+
+
     //we use the function here
-    val tip = calculateTip(amount)
+    val tip = calculateTip(amount, tipAmount)
 
     Column(
         modifier = Modifier
@@ -84,7 +95,18 @@ fun TipTimeLayout() {
             onValueChange = { amountInput = it },
             modifier = Modifier
                 .padding(bottom = 32.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            label = R.string.bill_amount
+
+        )
+        EditNumberField(
+            //added value, and onValueChange for state holding
+            value = tipAmountInput,
+            onValueChange = { tipAmountInput = it },
+            modifier = Modifier
+                .padding(bottom = 32.dp)
+                .fillMaxWidth(),
+            label = R.string.tipPercentage
         )
         Text(
             //TODO:
@@ -102,6 +124,7 @@ fun TipTimeLayout() {
  * according to the local currency.
  * Example would be "$10.00".
  */
+//NOTE how tipPercent parameter doesnt have to be initialized.
 private fun calculateTip(amount: Double, tipPercent: Double = 15.0): String {
     // using NumberFormat to display the format of the tip as currency.
     val tip = tipPercent / 100 * amount
@@ -122,13 +145,18 @@ private fun calculateTip(amount: Double, tipPercent: Double = 15.0): String {
 @Composable
 fun EditNumberField(value: String,
                     onValueChange: (String) -> Unit,
-                    modifier: Modifier = Modifier) {
+                    modifier: Modifier = Modifier,
+                    //TODO: using parameter val itself as what we decide. not some if else var flag
+                    //To denote that the label parameter is expected to be a string resource reference,
+                    // annotate the function parameter with the @StringRes annotation
+                    //(also var is Int not lower case int for parameter)
+                    @StringRes label: Int) {
 
     TextField(
         onValueChange = onValueChange,
         value = value,
 
-        label = { Text(stringResource(R.string.bill_amount)) },
+        label = { Text(stringResource(label)) },
         //only one line, no paragraphs
         singleLine = true,
         //KeyboardType.Number keeps it to numbers

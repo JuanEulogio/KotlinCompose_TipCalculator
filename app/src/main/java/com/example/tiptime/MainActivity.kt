@@ -4,17 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -33,7 +40,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import kotlin.math.round
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,8 +79,16 @@ fun TipTimeLayout() {
     val tipAmount = tipAmountInput.toDoubleOrNull() ?: 0.0
 
 
-    //we use the function here
-    val tip = calculateTip(amount, tipAmount)
+    //TODO: remember about 'remember' and 'observe with mutableStateOf'
+    var roundUp by remember { mutableStateOf(false) }
+
+
+
+
+
+    //TODO: we use the function here and
+    // keep track of tip up top here
+    val tip = calculateTip(amount, tipAmount, roundUp)
 
     Column(
         modifier = Modifier
@@ -78,7 +96,10 @@ fun TipTimeLayout() {
             .statusBarsPadding()
             .padding(horizontal = 40.dp)
             //TODO: safeDrawingPadding()
-            .safeDrawingPadding(),
+            .safeDrawingPadding()
+            //.verticalScroll(rememberScrollState()) to the modifier to enable the column to scroll vertically.
+            // The rememberScrollState() creates and automatically remembers the scroll state.
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -96,8 +117,14 @@ fun TipTimeLayout() {
             modifier = Modifier
                 .padding(bottom = 32.dp)
                 .fillMaxWidth(),
-            label = R.string.bill_amount
-
+            label = R.string.bill_amount,
+            //KeyboardType.Number keeps it to numbers, and  keyboard action button is a button
+            // at the end of the keyboard. You can see some examples in this table:
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next
+            ),
+            leadingIcon = R.drawable.money
         )
         EditNumberField(
             //added value, and onValueChange for state holding
@@ -106,7 +133,19 @@ fun TipTimeLayout() {
             modifier = Modifier
                 .padding(bottom = 32.dp)
                 .fillMaxWidth(),
-            label = R.string.tipPercentage
+            label = R.string.tipPercentage,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+            ),
+            leadingIcon = R.drawable.percent
+        )
+        RoundTheTipRow(
+            roundUp = roundUp,
+            //TODO: note how we hoist in the clickback
+            onRoundUpChanged = { roundUp = it },
+            //TODO: we premake a padding for it here
+            modifier = Modifier.padding(bottom = 32.dp)
         )
         Text(
             //TODO:
@@ -125,9 +164,11 @@ fun TipTimeLayout() {
  * Example would be "$10.00".
  */
 //NOTE how tipPercent parameter doesnt have to be initialized.
-private fun calculateTip(amount: Double, tipPercent: Double = 15.0): String {
+private fun calculateTip(amount: Double, tipPercent: Double = 15.0, roundTip: Boolean): String {
     // using NumberFormat to display the format of the tip as currency.
-    val tip = tipPercent / 100 * amount
+    var tip = tipPercent / 100 * amount
+    if(roundTip) tip= kotlin.math.ceil(tip)
+    //TODO: we change int to string here. And apply format semerate here
     return NumberFormat.getCurrencyInstance().format(tip)
 }
 
@@ -150,7 +191,9 @@ fun EditNumberField(value: String,
                     //To denote that the label parameter is expected to be a string resource reference,
                     // annotate the function parameter with the @StringRes annotation
                     //(also var is Int not lower case int for parameter)
-                    @StringRes label: Int) {
+                    @StringRes label: Int,
+                    keyboardOptions: KeyboardOptions,
+                    @DrawableRes leadingIcon: Int) {
 
     TextField(
         onValueChange = onValueChange,
@@ -159,13 +202,41 @@ fun EditNumberField(value: String,
         label = { Text(stringResource(label)) },
         //only one line, no paragraphs
         singleLine = true,
-        //KeyboardType.Number keeps it to numbers
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+
+        keyboardOptions = keyboardOptions,
         //(removed for state hoisting) onValueChange = { amountInput = it },
-        modifier = modifier
+        modifier = modifier,
+        //TODO: method of making icon
+        leadingIcon= { Icon(painter = painterResource(id = leadingIcon), null) }
     )
 }
 
+
+@Composable
+fun RoundTheTipRow(
+    modifier: Modifier = Modifier,
+    roundUp: Boolean,
+    //The callback to be called when the switch is clicked.
+    onRoundUpChanged: (Boolean) -> Unit) {
+    Row(
+        modifier = modifier
+            // child elements' width to the maximum on the screen
+            .fillMaxWidth()
+            .size(48.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Text(text = stringResource(id = R.string.round_up_tip))
+
+        Switch(
+            //align the Switch composable to the end of the screen
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentWidth(Alignment.End),
+            checked = roundUp,
+            onCheckedChange = onRoundUpChanged,
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable

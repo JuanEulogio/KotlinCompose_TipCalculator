@@ -72,10 +72,7 @@ fun TipTimeLayout() {
     val amount = amountInput.toDoubleOrNull() ?: 0.0
 
 
-    //for second box
     var tipAmountInput by remember { mutableStateOf("") }
-    //At the end of the statement, add an ?: Elvis operator that returns a 0.0 value when amountInput is null:
-    //The ?: Elvis operator returns the expression that precedes it if the value isn't null and the expression that proceeds it when the value is null.
     val tipAmount = tipAmountInput.toDoubleOrNull() ?: 0.0
 
 
@@ -119,7 +116,7 @@ fun TipTimeLayout() {
                 .fillMaxWidth(),
             label = R.string.bill_amount,
             //KeyboardType.Number keeps it to numbers, and  keyboard action button is a button
-            // at the end of the keyboard. You can see some examples in this table:
+            // at the end of the keyboard:
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next
@@ -142,13 +139,13 @@ fun TipTimeLayout() {
         )
         RoundTheTipRow(
             roundUp = roundUp,
-            //TODO: note how we hoist in the clickback
+            //NOTE: how we hoist in the clickback
             onRoundUpChanged = { roundUp = it },
-            //TODO: we premake a padding for it here
+            //NOTE: we premake a padding for it here
             modifier = Modifier.padding(bottom = 32.dp)
         )
         Text(
-            //TODO:
+            //NOTE:
             // note, we get the string with %s where our 'tip' val is passed as a parameter
             // and placed in that string
             text = stringResource(R.string.tip_amount, tip),
@@ -165,10 +162,9 @@ fun TipTimeLayout() {
  */
 //NOTE how tipPercent parameter doesnt have to be initialized.
 private fun calculateTip(amount: Double, tipPercent: Double = 15.0, roundTip: Boolean): String {
-    // using NumberFormat to display the format of the tip as currency.
     var tip = tipPercent / 100 * amount
     if(roundTip) tip= kotlin.math.ceil(tip)
-    //TODO: we change int to string here. And apply format semerate here
+    //NOTE: using NumberFormat to display the format of the tip as currency.
     return NumberFormat.getCurrencyInstance().format(tip)
 }
 
@@ -187,8 +183,8 @@ private fun calculateTip(amount: Double, tipPercent: Double = 15.0, roundTip: Bo
 fun EditNumberField(value: String,
                     onValueChange: (String) -> Unit,
                     modifier: Modifier = Modifier,
-                    //TODO: using parameter val itself as what we decide. not some if else var flag
-                    //To denote that the label parameter is expected to be a string resource reference,
+                    //NOTE: using label parameter val itself as what we decide. not some if else var flag
+                    //To denote that the label parameter thats expected to be a string resource reference,
                     // annotate the function parameter with the @StringRes annotation
                     //(also var is Int not lower case int for parameter)
                     @StringRes label: Int,
@@ -204,9 +200,9 @@ fun EditNumberField(value: String,
         singleLine = true,
 
         keyboardOptions = keyboardOptions,
-        //(removed for state hoisting) onValueChange = { amountInput = it },
+
         modifier = modifier,
-        //TODO: method of making icon
+        //NOTE: method of making icon
         leadingIcon= { Icon(painter = painterResource(id = leadingIcon), null) }
     )
 }
